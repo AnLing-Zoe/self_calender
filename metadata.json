@@ -1,0 +1,6 @@
+{
+  "name": "排程管理 Schedule Manager",
+  "description": "提供週排程堆疊長條圖、月曆圓點視圖、活動細節彈窗、分類自訂與顏色管理，以及排程輸入富文字編輯器的全方位排程管理應用。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
