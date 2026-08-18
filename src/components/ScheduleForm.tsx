@@ -23,7 +23,7 @@ interface ScheduleFormProps {
   categories: Category[];
   editingSchedule: ScheduleItem | null;
   initialDateKey?: string | null;
-  onSaveSchedule: (schedule: Omit<ScheduleItem, 'id' | 'createdAt'> & { id?: string }) => void;
+  onSaveSchedule: (schedule: Omit<ScheduleItem, 'id' | 'createdAt'> & { id?: string }) => Promise<void>;
   onCancelEdit?: () => void;
 }
 
@@ -52,6 +52,8 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
 
   const [errors, setErrors] = useState<{ date?: string; categoryId?: string }>({});
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Sync state if editingSchedule changes
   useEffect(() => {
@@ -93,7 +95,7 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors: { date?: string; categoryId?: string } = {};
@@ -114,18 +116,27 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
       title.trim() ||
       `${selectedCategory?.name || '行程'} - ${target || location || '日常安排'}`;
 
-    onSaveSchedule({
-      id: editingSchedule ? editingSchedule.id : undefined,
-      title: computedTitle,
-      date,
-      startTime,
-      endTime,
-      durationHours: durationHours || 1.5,
-      categoryId,
-      target: target.trim(),
-      location: location.trim(),
-      content: content.trim(),
-    });
+    setIsSaving(true);
+    setSaveError('');
+    try {
+      await onSaveSchedule({
+        id: editingSchedule ? editingSchedule.id : undefined,
+        title: computedTitle,
+        date,
+        startTime,
+        endTime,
+        durationHours: durationHours || 1.5,
+        categoryId,
+        target: target.trim(),
+        location: location.trim(),
+        content: content.trim(),
+      });
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : '排程儲存失敗');
+      setIsSaving(false);
+      return;
+    }
+    setIsSaving(false);
 
     setShowSuccessToast(true);
     setTimeout(() => {
@@ -191,6 +202,13 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
         <div className="my-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>{editingSchedule ? '排程已更新！' : '排程已新增！'}</span>
+        </div>
+      )}
+
+      {saveError && (
+        <div className="my-3 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{saveError}</span>
         </div>
       )}
 
@@ -434,10 +452,11 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
             <button
               type="submit"
               id="btn-save-schedule"
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              disabled={isSaving}
+              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:bg-slate-400 text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-wait"
             >
               <Save className="w-3.5 h-3.5" />
-              <span>{editingSchedule ? '儲存更新' : '確認儲存'}</span>
+              <span>{isSaving ? '同步中…' : editingSchedule ? '儲存更新' : '確認儲存'}</span>
             </button>
           </div>
         </div>

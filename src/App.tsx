@@ -3,10 +3,13 @@ import { Category, ScheduleItem, ActiveTab } from './types';
 import {
   loadCategories,
   saveCategories,
-  loadSchedules,
-  saveSchedules,
   DEFAULT_CATEGORIES,
 } from './utils/storage';
+import {
+  deleteScheduleFromGoogleSheet,
+  loadSchedulesFromGoogleSheet,
+  saveScheduleToGoogleSheet,
+} from './utils/googleSheets';
 import { Navbar } from './components/Navbar';
 import { CategoryFilter } from './components/CategoryFilter';
 import { StackedBarWeekChart } from './components/StackedBarWeekChart';
@@ -18,7 +21,8 @@ import { CategoryManager } from './components/CategoryManager';
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [categories, setCategories] = useState<Category[]>(() => loadCategories());
-  const [schedules, setSchedules] = useState<ScheduleItem[]>(() => loadSchedules());
+  const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
+  const [scheduleError, setScheduleError] = useState('');
 
   // Page 1 Filter State
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'ALL'>('ALL');
@@ -38,44 +42,48 @@ export default function App() {
     saveCategories(categories);
   }, [categories]);
 
-  // Synchronize schedules to localStorage
   useEffect(() => {
-    saveSchedules(schedules);
-  }, [schedules]);
+    loadSchedulesFromGoogleSheet(categories)
+      .then(setSchedules)
+      .catch((error) => setScheduleError(error instanceof Error ? error.message : '排程載入失敗'));
+  }, []);
 
   // Handler: Add or Update Schedule
   const handleSaveSchedule = (
     data: Omit<ScheduleItem, 'id' | 'createdAt'> & { id?: string }
   ) => {
+    const categoryName = categories.find((category) => category.id === data.categoryId)?.name || '未分類';
+
     if (data.id) {
-      // Update existing
-      setSchedules((prev) =>
-        prev.map((item) =>
-          item.id === data.id
-            ? {
-                ...item,
-                ...data,
-                id: data.id!,
-                createdAt: item.createdAt,
-              }
-            : item
-        )
-      );
-      setEditingSchedule(null);
+      const current = schedules.find((item) => item.id === data.id);
+      if (!current) return Promise.reject(new Error('找不到要更新的排程'));
+      const updated = {...current, ...data, id: data.id};
+      return saveScheduleToGoogleSheet(updated, categoryName).then(() => {
+        setSchedules((prev) => prev.map((item) => item.id === updated.id ? updated : item));
+        setEditingSchedule(null);
+      });
     } else {
-      // Create new
       const newItem: ScheduleItem = {
         ...data,
         id: `sched-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         createdAt: Date.now(),
       };
-      setSchedules((prev) => [newItem, ...prev]);
+      return saveScheduleToGoogleSheet(newItem, categoryName).then((saved) => {
+        setSchedules((prev) => [saved || newItem, ...prev]);
+      });
     }
   };
 
   // Handler: Delete Schedule
-  const handleDeleteSchedule = (scheduleId: string) => {
-    setSchedules((prev) => prev.filter((s) => s.id !== scheduleId));
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    const schedule = schedules.find((item) => item.id === scheduleId);
+    if (!schedule) return;
+    try {
+      await deleteScheduleFromGoogleSheet(schedule);
+      setSchedules((prev) => prev.filter((item) => item.id !== scheduleId));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '排程刪除失敗');
+    }
   };
 
   // Handler: Open edit schedule in Page 2
@@ -138,6 +146,11 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {scheduleError && (
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+            {scheduleError}
+          </div>
+        )}
         {/* PAGE 1: 排程展示 (OVERVIEW) */}
         {activeTab === 'overview' && (
           <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
