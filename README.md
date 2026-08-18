@@ -56,6 +56,14 @@ VITE_GOOGLE_SHEETS_API_URL="https://script.google.com/macros/s/DEPLOYMENT_ID/exe
 
 Apps Script 首次讀取時會在原工作表後方補上 `ID` 與 `建立時間` 欄位，供同步辨識使用。分類設定仍儲存在目前瀏覽器的 `localStorage`。
 
+## GitHub Pages 部署
+
+1. 在 GitHub repository 的「Settings → Secrets and variables → Actions → Variables」新增 `VITE_GOOGLE_SHEETS_API_URL`。
+2. 在「Settings → Pages → Build and deployment」選擇 `GitHub Actions`。
+3. 推送至 `main`，或從 Actions 手動執行 `Deploy GitHub Pages`。
+
+`VITE_*` 變數會打包到瀏覽器端，不能用來保存密碼或 API secret；此處只存放 Apps Script Web App URL。
+
 ## 專案結構
 
 ```text
