@@ -6,8 +6,11 @@ import {
   DEFAULT_CATEGORIES,
 } from './utils/storage';
 import {
+  deleteCategoryFromGoogleSheet,
   deleteScheduleFromGoogleSheet,
-  loadSchedulesFromGoogleSheet,
+  loadGoogleSheetData,
+  replaceCategoriesInGoogleSheet,
+  saveCategoryToGoogleSheet,
   saveScheduleToGoogleSheet,
 } from './utils/googleSheets';
 import { Navbar } from './components/Navbar';
@@ -43,8 +46,11 @@ export default function App() {
   }, [categories]);
 
   useEffect(() => {
-    loadSchedulesFromGoogleSheet(categories)
-      .then(setSchedules)
+    loadGoogleSheetData(categories)
+      .then((data) => {
+        setCategories(data.categories);
+        setSchedules(data.schedules);
+      })
       .catch((error) => setScheduleError(error instanceof Error ? error.message : '排程載入失敗'));
   }, []);
 
@@ -100,33 +106,51 @@ export default function App() {
   };
 
   // Category Handlers
-  const handleAddCategory = (name: string, color: string) => {
+  const handleAddCategory = async (name: string, color: string) => {
     const newCat: Category = {
       id: `cat-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
       name,
       color,
     };
-    setCategories((prev) => [...prev, newCat]);
-  };
-
-  const handleUpdateCategory = (updatedCat: Category) => {
-    setCategories((prev) =>
-      prev.map((c) => (c.id === updatedCat.id ? updatedCat : c))
-    );
-  };
-
-  const handleDeleteCategory = (categoryId: string) => {
-    // Remove category
-    setCategories((prev) => prev.filter((c) => c.id !== categoryId));
-    // If selected in filter, reset filter to ALL
-    if (selectedCategoryId === categoryId) {
-      setSelectedCategoryId('ALL');
+    try {
+      await saveCategoryToGoogleSheet(newCat);
+      setCategories((prev) => [...prev, newCat]);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '種類新增失敗');
     }
   };
 
-  const handleResetDefaultCategories = () => {
-    setCategories(DEFAULT_CATEGORIES);
-    setSelectedCategoryId('ALL');
+  const handleUpdateCategory = async (updatedCat: Category) => {
+    const current = categories.find((category) => category.id === updatedCat.id);
+    if (!current) return;
+    try {
+      await saveCategoryToGoogleSheet(updatedCat, current.name);
+      setCategories((prev) => prev.map((c) => (c.id === updatedCat.id ? updatedCat : c)));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '種類更新失敗');
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    const category = categories.find((item) => item.id === categoryId);
+    if (!category) return;
+    try {
+      await deleteCategoryFromGoogleSheet(category);
+      setCategories((prev) => prev.filter((item) => item.id !== categoryId));
+      if (selectedCategoryId === categoryId) setSelectedCategoryId('ALL');
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '種類刪除失敗');
+    }
+  };
+
+  const handleResetDefaultCategories = async () => {
+    try {
+      await replaceCategoriesInGoogleSheet(DEFAULT_CATEGORIES);
+      setCategories(DEFAULT_CATEGORIES);
+      setSelectedCategoryId('ALL');
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '種類重設失敗');
+    }
   };
 
   return (
@@ -250,7 +274,7 @@ export default function App() {
       {/* Subtle Footer */}
       <footer className="border-t border-slate-200/80 bg-white py-6 mt-12 text-center text-xs text-slate-400">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>排程管理系統 · 週排程堆疊圖與月曆管理</span>
+          <span>排程管理系統 · 週排程與月曆管理</span>
           <span className="text-slate-400 font-medium">支援自訂分類色彩與富文字排版</span>
         </div>
       </footer>

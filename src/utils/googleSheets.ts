@@ -55,6 +55,18 @@ function toDateKey(value: string): string {
   return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
 }
 
+function rowsToCategories(rows: string[][]): Category[] {
+  const [headers = [], ...dataRows] = rows;
+  const nameColumn = headers.indexOf('種類');
+  const colorColumn = headers.indexOf('色號');
+
+  return dataRows.flatMap((row) => {
+    const name = row[nameColumn]?.trim();
+    if (!name) return [];
+    return [{id: `sheet-${name}`, name, color: row[colorColumn]?.trim() || '#93C5FD'}];
+  });
+}
+
 function rowsToSchedules(rows: string[][], categories: Category[]): ScheduleItem[] {
   const [headers = [], ...dataRows] = rows;
   const column = (name: string) => headers.indexOf(name);
@@ -86,35 +98,52 @@ function rowsToSchedules(rows: string[][], categories: Category[]): ScheduleItem
   });
 }
 
-export async function loadSchedulesFromGoogleSheet(categories: Category[]): Promise<ScheduleItem[]> {
+export async function loadGoogleSheetData(fallbackCategories: Category[]): Promise<{
+  categories: Category[];
+  schedules: ScheduleItem[];
+}> {
   const response = await fetch(API_URL || CSV_URL, {cache: 'no-store'});
   if (!response.ok) throw new Error(`Google Sheet 讀取失敗 (${response.status})`);
 
   if (API_URL) {
     const result = await response.json();
     if (!result.ok || !Array.isArray(result.rows)) throw new Error(result.error || 'Google Sheet 回應格式錯誤');
-    return rowsToSchedules(result.rows, categories);
+    const categories = Array.isArray(result.categories) ? rowsToCategories(result.categories) : fallbackCategories;
+    return {categories, schedules: rowsToSchedules(result.rows, categories)};
   }
-  return rowsToSchedules(parseCsv(await response.text()), categories);
+  const rows = parseCsv(await response.text());
+  return {categories: fallbackCategories, schedules: rowsToSchedules(rows, fallbackCategories)};
 }
 
-async function writeSchedule(action: 'save' | 'delete', schedule: ScheduleItem, categoryName?: string) {
+async function write(payload: object) {
   if (!API_URL) throw new Error('尚未設定 VITE_GOOGLE_SHEETS_API_URL，無法寫入 Google Sheet');
 
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {'Content-Type': 'text/plain;charset=utf-8'},
-    body: JSON.stringify({action, schedule, categoryName}),
+    body: JSON.stringify(payload),
   });
   const result = await response.json();
   if (!response.ok || !result.ok) throw new Error(result.error || 'Google Sheet 寫入失敗');
-  return result.schedule as ScheduleItem | undefined;
+  return result;
 }
 
 export function saveScheduleToGoogleSheet(schedule: ScheduleItem, categoryName: string) {
-  return writeSchedule('save', schedule, categoryName);
+  return write({action: 'save', schedule, categoryName}).then((result) => result.schedule as ScheduleItem | undefined);
 }
 
 export function deleteScheduleFromGoogleSheet(schedule: ScheduleItem) {
-  return writeSchedule('delete', schedule);
+  return write({action: 'delete', schedule});
+}
+
+export function saveCategoryToGoogleSheet(category: Category, previousName?: string) {
+  return write({action: 'saveCategory', category, previousName});
+}
+
+export function deleteCategoryFromGoogleSheet(category: Category) {
+  return write({action: 'deleteCategory', category});
+}
+
+export function replaceCategoriesInGoogleSheet(categories: Category[]) {
+  return write({action: 'replaceCategories', categories});
 }

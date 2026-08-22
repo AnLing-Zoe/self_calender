@@ -1,6 +1,6 @@
 # 排程管理系統
 
-一個以 React 製作的個人排程管理介面，提供週排程統計、月曆瀏覽、排程編輯與自訂分類功能。排程資料以 Google Sheet 為唯一來源，分類設定保存在瀏覽器的 `localStorage`。
+一個以 React 製作的個人排程管理介面，提供週排程統計、月曆瀏覽、排程編輯與自訂分類功能。排程與分類資料皆以 Google Sheet 為來源。
 
 ## 功能
 
@@ -54,7 +54,7 @@ npm run lint     # 執行 TypeScript 型別檢查
 VITE_GOOGLE_SHEETS_API_URL="https://script.google.com/macros/s/DEPLOYMENT_ID/exec"
 ```
 
-Apps Script 首次讀取時會在原工作表後方補上 `ID` 與 `建立時間` 欄位，供同步辨識使用。分類設定仍儲存在目前瀏覽器的 `localStorage`。
+Apps Script 首次讀取時會在 `排程細項` 工作表後方補上 `ID` 與 `建立時間` 欄位，供同步辨識使用。分類從 `種類維護` 工作表的 `種類`、`色號` 欄位載入，並同步新增、編輯與刪除。
 
 ## GitHub Pages 部署
 
