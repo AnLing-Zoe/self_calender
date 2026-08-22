@@ -60,12 +60,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
     }
   };
 
-  const handleCurrentMonth = () => {
-    const now = new Date();
-    setCurrentYear(now.getFullYear());
-    setCurrentMonth(now.getMonth());
-  };
-
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 sm:p-5 transition-all">
       {/* Calendar Header */}
@@ -94,15 +88,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
             className="p-1 rounded hover:bg-white text-slate-600 transition-all cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          <button
-            type="button"
-            id="btn-current-month-today"
-            onClick={handleCurrentMonth}
-            className="px-2 py-0.5 text-xs font-semibold rounded hover:bg-white text-slate-700 transition-all cursor-pointer"
-          >
-            當月
           </button>
 
           <button

@@ -81,7 +81,7 @@ export const StackedBarWeekChart: React.FC<StackedBarWeekChartProps> = ({
   const yTicks = [0, yMax * 0.25, yMax * 0.5, yMax * 0.75, yMax].map((v) => Math.round(v * 10) / 10);
 
   // Total weekly stats
-  const totalWeeklyHours = dayColumns.reduce((sum, d) => sum + d.totalHours, 0);
+  const totalWeeklyHours = Math.ceil(dayColumns.reduce((sum, d) => sum + d.totalHours, 0) * 10) / 10;
   const totalWeeklyCount = dayColumns.reduce((sum, d) => sum + d.items.length, 0);
 
   // Category breakdown for this week
@@ -104,10 +104,6 @@ export const StackedBarWeekChart: React.FC<StackedBarWeekChartProps> = ({
     onChangeWeekAnchor(d);
   };
 
-  const handleTodayWeek = () => {
-    onChangeWeekAnchor(new Date());
-  };
-
   const firstDay = weekDays[0];
   const lastDay = weekDays[6];
   const weekRangeTitle = `${firstDay.getFullYear()} 年 ${firstDay.getMonth() + 1}/${firstDay.getDate()} ~ ${
@@ -124,7 +120,7 @@ export const StackedBarWeekChart: React.FC<StackedBarWeekChartProps> = ({
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight">
-              本週排程堆疊圖
+              排程堆疊圖
             </h2>
             <p className="text-[11px] text-slate-400">
               {weekRangeTitle}
@@ -142,15 +138,6 @@ export const StackedBarWeekChart: React.FC<StackedBarWeekChartProps> = ({
             className="p-1 rounded hover:bg-white text-slate-600 transition-all cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          <button
-            type="button"
-            id="btn-current-week-today"
-            onClick={handleTodayWeek}
-            className="px-2 py-0.5 text-xs font-semibold rounded hover:bg-white text-slate-700 transition-all cursor-pointer"
-          >
-            本週
           </button>
 
           <button
@@ -343,7 +330,7 @@ export const StackedBarWeekChart: React.FC<StackedBarWeekChartProps> = ({
         </div>
 
         <div className="text-xs font-semibold text-slate-600">
-          本週合計：<span className="text-slate-900 font-bold">{totalWeeklyHours}h</span> ({totalWeeklyCount} 筆)
+          合計：<span className="text-slate-900 font-bold">{totalWeeklyHours.toFixed(1)}h</span> ({totalWeeklyCount} 筆)
         </div>
       </div>
     </div>
