@@ -215,9 +215,9 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
       {/* Form Body */}
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         {/* Row 1: Date & Time */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="grid min-w-0 grid-cols-1 sm:grid-cols-2 gap-3.5">
           {/* Date Picker */}
-          <div className="space-y-1">
+          <div className="min-w-0 space-y-1">
             <label className="block text-xs font-bold text-slate-700 flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5 text-indigo-600" />
               <span>日期</span>
@@ -233,7 +233,7 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
                 if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }));
               }}
               required
-              className={`w-full px-3 py-2 rounded-xl border text-sm font-medium transition-all focus:outline-none focus:ring-2 ${
+              className={`block w-full min-w-0 max-w-full px-3 py-2 rounded-xl border text-sm font-medium transition-all focus:outline-none focus:ring-2 ${
                 errors.date
                   ? 'border-rose-300 ring-rose-100 bg-rose-50/20'
                   : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20 bg-white'
@@ -274,7 +274,7 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
           </div>
 
           {/* Time Picker & Duration */}
-          <div className="space-y-1">
+          <div className="min-w-0 space-y-1">
             <label className="block text-xs font-bold text-slate-700 flex items-center justify-between">
               <span className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-indigo-600" />
@@ -285,20 +285,20 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
               </span>
             </label>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid min-w-0 grid-cols-2 gap-2">
               <input
                 type="time"
                 id="input-schedule-start-time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                className="block w-full min-w-0 max-w-full px-2.5 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
               />
               <input
                 type="time"
                 id="input-schedule-end-time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                className="block w-full min-w-0 max-w-full px-2.5 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
               />
             </div>
           </div>
