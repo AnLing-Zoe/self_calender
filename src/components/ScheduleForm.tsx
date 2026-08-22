@@ -233,7 +233,7 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
                 if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }));
               }}
               required
-              className={`block w-full min-w-0 max-w-full px-3 py-2 rounded-xl border text-sm font-medium transition-all focus:outline-none focus:ring-2 ${
+              className={`block w-0 min-w-full max-w-full px-3 py-2 rounded-xl border text-base sm:text-sm font-medium transition-all focus:outline-none focus:ring-2 ${
                 errors.date
                   ? 'border-rose-300 ring-rose-100 bg-rose-50/20'
                   : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20 bg-white'
@@ -285,20 +285,20 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
               </span>
             </label>
 
-            <div className="grid min-w-0 grid-cols-2 gap-2">
+            <div className="grid min-w-0 grid-cols-1 min-[480px]:grid-cols-2 gap-2">
               <input
                 type="time"
                 id="input-schedule-start-time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="block w-full min-w-0 max-w-full px-2.5 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                className="block w-0 min-w-full max-w-full px-2.5 py-2 rounded-xl border border-slate-200 text-base sm:text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
               />
               <input
                 type="time"
                 id="input-schedule-end-time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="block w-full min-w-0 max-w-full px-2.5 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                className="block w-0 min-w-full max-w-full px-2.5 py-2 rounded-xl border border-slate-200 text-base sm:text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
               />
             </div>
           </div>
